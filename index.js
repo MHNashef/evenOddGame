@@ -1,55 +1,44 @@
-const prompt = require("prompt-sync")({ sigint: true });
+const getPlayers = require("./getPlayers");
+const roundWinner = require("./roundWinner");
+const args = require("minimist")(process.argv);
+
 const MAX = 13;
 const MIN = -5;
+const players = [];
+const bestOf = args.b || 5;
 
-const players = [
-  {
-    player1: {
-      name: "",
-      score: 0,
-    }
-  },
-  {
-    player2: {
-      name: "",
-      score: 0,
-    }
-  },
-];
+getPlayers(args.n, players);
 
-const player1 = prompt("Enter Player1 name: ");
-const player2 = prompt("Enter Player2 name: ");
-players[0].player1.name = player1;
-players[1].player2.name = player2;
+function winnerDecided() {
+  let foundWinner = false;
+  players.forEach((player) => {
+    if (player.score === Math.ceil(bestOf / 2)) {
+      foundWinner = true;
+    }
+  });
+  return foundWinner;
+}
 
 let roundNum = 1;
-while (players[0].player1.score < 3 && players[1].player2.score < 3) {
+while (!winnerDecided()) {
   let rnd = Math.floor(Math.random() * (MAX - MIN)) + MIN;
+  let p1 = 0;
+  let p2 = 1;
 
-  if (rnd % 2 === 0) {
-    players[0].player1.score++;
-    console.log(
-      `Round #${roundNum}, random number is ${rnd}, ${players[0].player1.name} scored!`
-    );
-    console.log(
-      `Status: ${players[0].player1.name} ${players[0].player1.score}, ${players[1].player2.name} ${players[1].player2.score}`
-    );
-  } else {
-    players[1].player2.score++;
-    console.log(
-      `Round #${roundNum}, random number is ${rnd}, ${players[1].player2.name} scored!`
-    );
-    console.log(
-      `Status: ${players[0].player1.name} ${players[0].player1.score}, ${players[1].player2.name} ${players[1].player2.score}`
-    );
+  if (players.length > 2) {
+    p1 = Math.floor(Math.random() * players.length);
+    do {
+      p2 = Math.floor(Math.random() * players.length);
+    } while (p1 == p2);
   }
+
+  roundWinner(rnd, p1, p2, players, roundNum);
 
   roundNum++;
 }
 console.log(
   `${
-    players[0].player1.score > players[1].player2.score
-      ? players[0].player1.name
-      : players[1].player2.name
+    players[0].score > players[1].score ? players[0].name : players[1].name
   } Wins!`
 );
+console.table(players);
